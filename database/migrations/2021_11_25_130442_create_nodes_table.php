@@ -16,7 +16,7 @@ class CreateNodesTable extends Migration
         Schema::create('nodes', function (Blueprint $table) {
             $table->id();
             $table->string('title', 20);
-            $table->string('path');
+            $table->string('path')->nullable();
             $table->foreignId('node_id')->nullable()->references('id')->on('nodes');
             $table->timestamps();
         });
