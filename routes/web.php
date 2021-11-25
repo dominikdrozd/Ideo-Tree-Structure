@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::resource('nodes', NodeController::class);
+Route::resource('nodes', NodeController::class)->middleware('isAdmin');
 
 Route::get('/', function () {
     return view('welcome');
