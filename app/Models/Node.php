@@ -16,7 +16,8 @@ class Node extends Model
     ];
 
     public function depth() {
-        return self::getDescendants($this->id)->count();
+        $depth = explode('.', $this->path);
+        return count($depth);
     }
 
     public function parent() {
@@ -33,6 +34,14 @@ class Node extends Model
 
     public function descendants() {
         return self::getDescendants($this->id);
+    }
+
+    public function loadTree(bool $orderDesc = false) {
+        $allNodes = Node::orderBy('title', $orderDesc ? 'DESC' : 'ASC')->get();
+        $childrenNodes = $allNodes->where('node_id', $this->id);
+
+        self::formatTree($childrenNodes, $allNodes);
+        $this->children = $childrenNodes;
     }
 
     public static function getParent($id) {
@@ -64,9 +73,22 @@ class Node extends Model
         return $descendants;
     }
 
-    // TODO
-    public static function refreshPaths() {
+    public static function getTree(bool $orderDesc = false) {
+        $allNodes = Node::orderBy('title', $orderDesc ? 'DESC' : 'ASC')->get();
+        $rootNodes = $allNodes->whereNull('node_id');
 
+        self::formatTree($rootNodes, $allNodes);
+        return $rootNodes;
+    }
+
+    public static function formatTree($rootNodes, $allNodes) {
+        foreach ($rootNodes as $rootNode) {
+            $rootNode->children = $allNodes->where('node_id', $rootNode->id);
+
+            if ($rootNode->children->isNotEmpty()) {
+                self::formatTree($rootNode->children, $allNodes);
+            }
+        }
     }
 
 }
