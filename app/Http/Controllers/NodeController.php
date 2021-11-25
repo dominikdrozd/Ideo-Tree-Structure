@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\NodeRequest;
 use App\Models\Node;
 use Illuminate\Http\Request;
 
@@ -43,8 +44,10 @@ class NodeController extends Controller
      *
      * @return void
      */
-    public function store() {
-        // TODO SAVE
+    public function store(NodeRequest $request) {
+        $validated = $request->validated();
+        Node::create($validated);
+        return back()->with('success', 'node created.');
     }
 
     /**
@@ -54,7 +57,7 @@ class NodeController extends Controller
      */
     public function edit(Node $node) {
         $nodeList = Node::all();
-        return view('nodes.create', compact('node', 'nodeList'));
+        return view('nodes.edit', compact('node', 'nodeList'));
     }
 
     /**
@@ -62,8 +65,15 @@ class NodeController extends Controller
      *
      * @return void
      */
-    public function update() {
-        // TODO Save
+    public function update(Node $node, NodeRequest $request) {
+        $validated = $request->validated();
+        $node->update($validated);
+        return back()->with('success', 'node updated.');
+    }
+
+    public function destroy(Node $node) {
+        $node->delete();
+        return back()->with('success', 'node deleted.');
     }
 
 }
