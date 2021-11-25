@@ -15,6 +15,26 @@ class Node extends Model
         'node_id'
     ];
 
+    public function depth() {
+        return self::getDescendants($this->id)->count();
+    }
+
+    public function parent() {
+        return self::getParent($this->id);
+    }
+
+    public function children() {
+        return self::getChildren($this->id);
+    }
+
+    public function ancestors() {
+        return self::getAncestors($this->id);
+    }
+
+    public function descendants() {
+        return self::getDescendants($this->id);
+    }
+
     public static function getParent($id) {
         $node = Node::findOrFail($id);
         $parent = Node::findOrFail($node->node_id);
@@ -38,6 +58,7 @@ class Node extends Model
     public static function getDescendants($id) {
         $node = Node::findOrFail($id);
         $ids = explode('.', $node->path);
+        array_pop($ids);
 
         $descendants = Node::WhereIn('id', $ids)->get();
         return $descendants;
