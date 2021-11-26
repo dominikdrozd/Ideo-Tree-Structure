@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Node extends Model
 {
     use HasFactory;
+
+    public $children;
 
     protected $fillable = [
         'title',
@@ -36,6 +39,32 @@ class Node extends Model
         return self::getDescendants($this->id);
     }
 
+
+    public function updateWithPathWithDescendants(array $attributes=[], array $options=[]) {
+        $oldPath = $this->path;
+        $parent = Node::find($attributes['node_id']);
+        $path = '';
+
+        if ($parent){
+            $parentPath = str_replace(array("\n","\r\n","\r"), '', $parent->path);
+            $path = $parentPath . '.';
+        }
+        $path .= $this->id;
+        $attributes['path'] = $path;
+
+        $this->update($attributes, $options);
+        $this->updateDescendants($oldPath);
+    }
+
+    protected function updateDescendants(string $oldPath){
+
+
+        // Update in database.
+        DB::table('nodes')
+            ->where('path', 'LIKE', $oldPath . '.%')
+            ->update(['path' => DB::raw("REPLACE(path, '$oldPath', '$this->path')")]);
+    }
+
     public function loadTree(bool $orderDesc = false) {
         $allNodes = Node::orderBy('title', $orderDesc ? 'DESC' : 'ASC')->get();
         $childrenNodes = $allNodes->where('node_id', $this->id);
@@ -57,14 +86,14 @@ class Node extends Model
         return $children;
     }
 
-    public static function getAncestors($id) {
+    public static function getDescendants($id) {
         $node = Node::findOrFail($id);
 
         $ancestors = Node::where('path', 'LIKE', $node->path.'.%')->get();
         return $ancestors;
     }
 
-    public static function getDescendants($id) {
+    public static function getAncestors($id) {
         $node = Node::findOrFail($id);
         $ids = explode('.', $node->path);
         array_pop($ids);

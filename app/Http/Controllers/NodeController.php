@@ -67,7 +67,7 @@ class NodeController extends Controller
      */
     public function update(Node $node, NodeRequest $request) {
         $validated = $request->validated();
-        $node->update($validated);
+        $node->updateWithPathWithDescendants($validated);
         return back()->with('success', 'node updated.');
     }
 
