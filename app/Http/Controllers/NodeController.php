@@ -56,7 +56,10 @@ class NodeController extends Controller
      * @return void
      */
     public function edit(Node $node) {
-        $nodeList = Node::all();
+        $descendantsIds = $node->descendants()->pluck('id');
+        $descendantsIds->push($node->id);
+
+        $nodeList = Node::whereNotIn('id', $descendantsIds)->get();
         return view('nodes.edit', compact('node', 'nodeList'));
     }
 
