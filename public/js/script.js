@@ -1,4 +1,15 @@
 const toggleButtons = document.querySelectorAll('.toggle');
+const toggleAllButton = document.querySelector('.toggle-all');
+
+toggleAllButton.addEventListener('click', ev => {
+    const nodeElements = document.querySelectorAll('.hidden');
+    nodeElements.forEach(el => {
+        el.classList.remove('hidden');
+    });
+    toggleButtons.forEach(el => {
+        el.innerHTML = '-';
+    });
+});
 
 toggleButtons.forEach(el => {
     el.addEventListener('click', ev => {

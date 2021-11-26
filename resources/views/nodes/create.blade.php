@@ -22,7 +22,7 @@
                     </option>
                 @endforeach
             </select>
-            <input class="h-10 hover:bg-gray-500 pointer" type="submit" value="Send"/>
+            <input class="h-10 hover:bg-gray-500 cursor-pointer" type="submit" value="Send"/>
         </div>
     </form>
 </x-node-layout>

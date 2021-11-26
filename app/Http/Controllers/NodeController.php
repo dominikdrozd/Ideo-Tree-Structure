@@ -75,8 +75,15 @@ class NodeController extends Controller
     }
 
     public function destroy(Node $node) {
-        $node->delete();
-        return back()->with('success', 'node deleted.');
+        $descendants = $node->descendants();
+
+        if($descendants->count() <= 0) {
+            $node->delete();
+            return back()->with('success', 'node deleted.');
+        }
+
+        $node->deleteWithDescendants();
+        return back()->with('success', 'node deleted with descendants.');
     }
 
 }
