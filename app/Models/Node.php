@@ -35,7 +35,7 @@ class Node extends Model
      * @return Node
      */
     public function parent() {
-        return self::getParent($this->id);
+        return $this->belongsTo(Node::class, 'node_id', 'id');
     }
 
     /**
@@ -44,7 +44,7 @@ class Node extends Model
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function children() {
-        return self::getChildren($this->id);
+        return $this->hasMany(Node::class, 'node_id', 'id');
     }
 
     /**
