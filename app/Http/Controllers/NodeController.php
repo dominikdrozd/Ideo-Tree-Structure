@@ -10,9 +10,10 @@ class NodeController extends Controller
 {
 
     /**
-     * Return the tree.
+     * Index action that render tree.
      *
-     * @return void
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
      */
     public function index(Request $request) {
         $tree = Node::getTree($request->boolean('orderDesc'));
@@ -20,9 +21,11 @@ class NodeController extends Controller
     }
 
     /**
-     * Show part of node.
+     * Load part of tree.
      *
-     * @return void
+     * @param Node $node
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
      */
     public function show(Node $node, Request $request) {
         $tree = $node->loadTree($request->boolean('orderDesc'));
@@ -32,7 +35,7 @@ class NodeController extends Controller
     /**
      * Create form
      *
-     * @return void
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
      */
     public function create() {
         $nodeList = Node::all();
@@ -40,9 +43,10 @@ class NodeController extends Controller
     }
 
     /**
-     * Store data after validate.
+     * Store node data.
      *
-     * @return void
+     * @param NodeRequest $request
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
      */
     public function store(NodeRequest $request) {
         $validated = $request->validated();
@@ -51,9 +55,10 @@ class NodeController extends Controller
     }
 
     /**
-     * Edit form
+     * Edit form.
      *
-     * @return void
+     * @param NodeRequest $request
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
      */
     public function edit(Node $node) {
         $descendantsIds = $node->descendants()->pluck('id');
@@ -64,9 +69,11 @@ class NodeController extends Controller
     }
 
     /**
-     * Store data after validate.
+     * Store node data.
      *
-     * @return void
+     * @param Node $node
+     * @param NodeRequest $request
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
      */
     public function update(Node $node, NodeRequest $request) {
         $validated = $request->validated();
@@ -74,6 +81,12 @@ class NodeController extends Controller
         return back()->with('success', 'node updated.');
     }
 
+    /**
+     * Delete node.
+     *
+     * @param Node $node
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroy(Node $node) {
         $descendants = $node->descendants();
 

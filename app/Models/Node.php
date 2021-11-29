@@ -19,27 +19,57 @@ class Node extends Model
         'node_id'
     ];
 
+    /**
+     * Calculate depth of object in tree.
+     *
+     * @return int
+     */
     public function depth() {
         $depth = explode('.', $this->path);
         return count($depth);
     }
 
+    /**
+     * Get parent node.
+     *
+     * @return Node
+     */
     public function parent() {
         return self::getParent($this->id);
     }
 
+    /**
+     * Get collection of object children.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public function children() {
         return self::getChildren($this->id);
     }
 
+    /**
+     * Get collection of object ancestors.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public function ancestors() {
         return self::getAncestors($this->id);
     }
 
+    /**
+     * Get collection of object descendants.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public function descendants() {
         return self::getDescendants($this->id);
     }
 
+    /**
+     * Delete node without his descendants.
+     *
+     * @return bool|null
+     */
     public function deleteWithoutDescendants() {
         if($this->descendants()->count()) {
             DB::table('nodes')
@@ -50,9 +80,14 @@ class Node extends Model
                 ->where('path', 'LIKE', $this->path . '.%')
                 ->update(['path' => DB::raw("REPLACE(path, '.$this->id.', '.')")]);
         }
-        $this->delete();
+        return $this->delete();
     }
 
+    /**
+     * Delete node with his descendants.
+     *
+     * @return bool|null
+     */
     public function deleteWithDescendants() {
         $descendants = $this->descendants();
 
@@ -67,6 +102,13 @@ class Node extends Model
         return $this->delete();
     }
 
+    /**
+     * Update nodes with their descendants.
+     *
+     * @param array $attributes
+     * @param array $options
+     * @return bool
+     */
     public function updateWithPathWithDescendants(array $attributes=[], array $options=[]) {
         $oldPath = $this->path;
         $parent = Node::find($attributes['node_id']);
@@ -79,17 +121,30 @@ class Node extends Model
         $path .= $this->id;
         $attributes['path'] = $path;
 
-        $this->update($attributes, $options);
-        $this->updateDescendants($oldPath);
+        $this->updateDescendants($oldPath, $path);
+        return $this->update($attributes, $options);
     }
 
-    protected function updateDescendants(string $oldPath){
+    /**
+     * Update node path.
+     *
+     * @param string $oldPath
+     * @param string $newPath
+     * @return int
+     */
+    protected function updateDescendants(string $oldPath, string $newPath) {
         // Update in database.
-        DB::table('nodes')
+        return DB::table('nodes')
             ->where('path', 'LIKE', $oldPath . '.%')
-            ->update(['path' => DB::raw("REPLACE(path, '$oldPath', '$this->path')")]);
+            ->update(['path' => DB::raw("REPLACE(path, '$oldPath', '$newPath')")]);
     }
 
+    /**
+     * Prepare node tree.
+     *
+     * @param boolean $orderDesc
+     * @return void
+     */
     public function loadTree(bool $orderDesc = false) {
         $allNodes = Node::orderBy('title', $orderDesc ? 'DESC' : 'ASC')->get();
         $childrenNodes = $allNodes->where('node_id', $this->id);
@@ -98,19 +153,36 @@ class Node extends Model
         $this->children = $childrenNodes;
     }
 
+    /**
+     * Get parent node.
+     *
+     * @param integer $id
+     * @return Node
+     */
     public static function getParent(int $id) {
-        $node = Node::findOrFail($id);
-        $parent = Node::findOrFail($node->node_id);
-
+        $parent = Node::findOrFail(['node_id' => $id]);
         return $parent;
     }
 
+    /**
+     * Get children nodes.
+     *
+     * @param integer $id
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public static function getChildren(int $id) {
         $children = Node::where('node_id', $id)->get();
 
         return $children;
     }
 
+
+    /**
+     * Get descendant nodes.
+     *
+     * @param integer $id
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public static function getDescendants(int $id) {
         $node = Node::findOrFail($id);
 
@@ -118,6 +190,12 @@ class Node extends Model
         return $ancestors;
     }
 
+    /**
+     * Get ancestor nodes.
+     *
+     * @param integer $id
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public static function getAncestors(int $id) {
         $node = Node::findOrFail($id);
         $ids = explode('.', $node->path);
@@ -127,6 +205,12 @@ class Node extends Model
         return $descendants;
     }
 
+    /**
+     * Load full tree of nodes.
+     *
+     * @param boolean $orderDesc
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public static function getTree(bool $orderDesc = false) {
         $allNodes = Node::orderBy('title', $orderDesc ? 'DESC' : 'ASC')->get();
         $rootNodes = $allNodes->whereNull('node_id');
@@ -135,6 +219,13 @@ class Node extends Model
         return $rootNodes;
     }
 
+    /**
+     * Format tree structure.
+     *
+     * @param \Illuminate\Database\Eloquent\Collection $rootNodes
+     * @param \Illuminate\Database\Eloquent\Collection $allNodes
+     * @return void
+     */
     public static function formatTree(Collection $rootNodes, Collection $allNodes) {
         foreach ($rootNodes as $rootNode) {
             $rootNode->children = $allNodes->where('node_id', $rootNode->id);
