@@ -111,13 +111,15 @@ class Node extends Model
      */
     public function updateWithPathWithDescendants(array $attributes=[], array $options=[]) {
         $oldPath = $this->path;
-        $parent = Node::find($attributes['node_id']);
         $path = '';
+
+        $parent = isset($attributes['node_id']) ? Node::find($attributes['node_id']) : null;
 
         if ($parent){
             $parentPath = str_replace(array("\n","\r\n","\r"), '', $parent->path);
             $path = $parentPath . '.';
         }
+
         $path .= $this->id;
         $attributes['path'] = $path;
 
